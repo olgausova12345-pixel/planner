@@ -7,6 +7,10 @@ for (const p of perms) {
   const line = `<uses-permission android:name="android.permission.${p}" />`;
   if (!m.includes(`android.permission.${p}"`)) m = m.replace('</manifest>', `    ${line}\n</manifest>`);
 }
+// Записи не уходят в облачную резервную копию Android (перенос на новый телефон напрямую — можно)
+if (!m.includes('android:dataExtractionRules')) {
+  m = m.replace('<application', '<application\n        android:dataExtractionRules="@xml/data_extraction_rules"\n        android:fullBackupContent="@xml/backup_rules"');
+}
 writeFileSync(manifestPath, m);
 
 const gradlePath = 'android/app/build.gradle';

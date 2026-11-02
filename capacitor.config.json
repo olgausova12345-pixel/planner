@@ -4,7 +4,10 @@
   "webDir": "www",
   "android": {
     "adjustMarginsForEdgeToEdge": "auto",
-    "backgroundColor": "#F6F4EE"
+    "backgroundColor": "#F6F4EE",
+    "webContentsDebuggingEnabled": false,
+    "allowMixedContent": false,
+    "captureInput": false
   },
   "plugins": {
     "LocalNotifications": {

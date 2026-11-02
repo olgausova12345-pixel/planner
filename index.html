@@ -11,9 +11,9 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<script src="./boot.js?v=2026.11.02-1"></script>
-<link rel="stylesheet" href="./styles.css?v=2026.11.02-1">
-<script type="module" src="./app.js?v=2026.11.02-1"></script>
+<script src="./boot.js?v=2026.11.02-2"></script>
+<link rel="stylesheet" href="./styles.css?v=2026.11.02-2">
+<script type="module" src="./app.js?v=2026.11.02-2"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -184,6 +184,7 @@
       <h2 class="card-title"><svg class="ic"><use href="#i-save"/></svg>Резервная копия</h2>
       <p>Сохраните копию себе в мессенджер или на почту. Если телефон потеряется или сломается, записи можно будет восстановить.</p>
       <p class="muted" id="backup-last"></p>
+      <p class="hint">В файле копии — все ваши записи. Отправляйте его только себе (например, в «Избранное» мессенджера) и никому не пересылайте.</p>
       <button class="btn primary wide" type="button" id="btn-backup"><svg class="ic"><use href="#i-save"/></svg><span>Сохранить копию</span></button>
       <button class="btn wide" type="button" id="btn-restore"><svg class="ic"><use href="#i-restore"/></svg><span>Восстановить из файла</span></button>
       <input type="file" id="restore-file" accept=".json,.txt,application/json,text/plain" hidden>

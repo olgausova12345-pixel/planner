@@ -274,3 +274,32 @@ test('расписание системных уведомлений', () => {
   assert.ok(r.every((x, i) => i === 0 || r[i - 1].at <= x.at));
   assert.equal(L.upcomingReminders(tasks, bds, now, { days: 7, max: 2 }).length, 2);
 });
+
+test('копия: подделанный файл не может испортить записи', () => {
+  const evil = { format: 'planner-backup', version: 1, data: {
+    tasks: [
+      { id: 't1', date: '2026-10-29', title: 'a', repeat: { kind: 'days', days: 5 } },
+      { id: 't2', date: '2026-10-29', title: 'b', repeat: { kind: 'hack', until: { x: 1 } } },
+      { id: 't3', date: '2026-10-29', title: 'c', time: '99:99', remind: true, extra: 'x' },
+      { id: 't4', date: '2026-10-29', title: 'd', skip: '2026-10-29', doneDates: 7, seq: { a: 1 } },
+      { id: { x: 1 }, date: '2026-10-29', title: 'e' },
+      { id: '__proto__', date: '2026-10-29', title: 'f' },
+    ],
+    birthdays: [{ id: 'b1', name: 'X', day: 31, month: 2 }, { id: 'b2', name: 'Y', day: '5', month: '5', year: 3000, note: { x: 1 } }],
+    noteFolders: [{ id: 'f1', name: 'Папка', order: 'x' }],
+    notes: [{ id: 'n1', text: 'Т', folderId: { a: 1 }, pinned: 'yes' }],
+  } };
+  const p = L.parseBackup(JSON.stringify(evil));
+  assert.ok(p.ok);
+  assert.equal(p.data.tasks.length, 4);
+  assert.equal(p.skipped, 3);
+  const [t1, t2, t3, t4] = p.data.tasks;
+  assert.equal(t1.repeat, null); assert.equal(t2.repeat, null);
+  assert.equal(t3.time, null); assert.equal(t3.remind, false); assert.equal(t3.extra, undefined);
+  assert.deepEqual(t4.skip, []); assert.deepEqual(t4.doneDates, []); assert.equal(t4.seq, 0);
+  for (const t of p.data.tasks) { L.occursOn(t, '2026-10-30'); L.isDoneOn(t, '2026-10-29'); }
+  assert.deepEqual(p.data.birthdays.map((b) => [b.day, b.month, b.year, b.note]), [[5, 5, null, '']]);
+  assert.equal(p.data.noteFolders[0].order, 0);
+  assert.equal(p.data.notes[0].folderId, null); assert.equal(p.data.notes[0].pinned, false);
+  assert.equal(L.sanitizeRepeat({ kind: 'days', days: [1, 1, 9, 'x', 3] }).days.join(), '1,3');
+});

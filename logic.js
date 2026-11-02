@@ -151,19 +151,19 @@ export function repeatLabel(repeat, startIso) {
 export function occursOn(task, iso) {
   if (!task.repeat) return task.date === iso;
   if (iso < task.date) return false;
-  if (task.repeat.until && iso > task.repeat.until) return false;
-  if ((task.skip || []).includes(iso)) return false;
+  if (isISODate(task.repeat.until) && iso > task.repeat.until) return false;
+  if (Array.isArray(task.skip) && task.skip.includes(iso)) return false;
   const wd = weekday(iso);
   switch (task.repeat.kind) {
     case 'daily': return true;
     case 'weekdays': return wd < 5;
-    case 'days': return (task.repeat.days || []).includes(wd);
+    case 'days': return Array.isArray(task.repeat.days) && task.repeat.days.includes(wd);
     case 'monthly': return parseISO(iso).getDate() === parseISO(task.date).getDate();
     default: return false;
   }
 }
 export function isDoneOn(task, iso) {
-  return task.repeat ? (task.doneDates || []).includes(iso) : !!task.done;
+  return task.repeat ? (Array.isArray(task.doneDates) && task.doneDates.includes(iso)) : !!task.done;
 }
 /** Отметка выполнения: возвращает изменённую копию */
 export function setDoneOn(task, iso, done) {
@@ -400,14 +400,16 @@ function stripSync(r) {
   return o;
 }
 const isStr = (v) => typeof v === 'string';
+const isId = (v) => typeof v === 'string' && v.length > 0 && v.length <= 100 && v !== '__proto__' && v !== 'constructor' && v !== 'prototype';
 const VALIDATORS = {
-  tasks: (r) => isStr(r.id) && isISODate(r.date) && isStr(r.title) && r.title.trim() !== '' &&
+  tasks: (r) => isId(r.id) && isISODate(r.date) && isStr(r.title) && r.title.trim() !== '' &&
     (r.time == null || /^\d{2}:\d{2}$/.test(r.time)),
-  purchases: (r) => isStr(r.id) && isISODate(r.date) && isStr(r.title) && r.title.trim() !== '',
-  notes: (r) => isStr(r.id) && (isStr(r.text) || hasLegacyNoteFields(r)),
-  noteFolders: (r) => isStr(r.id) && isStr(r.name) && r.name.trim() !== '',
-  birthdays: (r) => isStr(r.id) && isStr(r.name) && Number(r.month) >= 1 && Number(r.month) <= 12 && Number(r.day) >= 1 && Number(r.day) <= 31,
-  vacations: (r) => isStr(r.id) && isISODate(r.start) && isISODate(r.end),
+  purchases: (r) => isId(r.id) && isISODate(r.date) && isStr(r.title) && r.title.trim() !== '',
+  notes: (r) => isId(r.id) && (isStr(r.text) || hasLegacyNoteFields(r)),
+  noteFolders: (r) => isId(r.id) && isStr(r.name) && r.name.trim() !== '',
+  birthdays: (r) => isId(r.id) && isStr(r.name) && r.name.trim() !== '' && Number.isInteger(Number(r.month)) && Number(r.month) >= 1 && Number(r.month) <= 12 &&
+    Number.isInteger(Number(r.day)) && Number(r.day) >= 1 && Number(r.day) <= daysInMonth(2024, Number(r.month) - 1),
+  vacations: (r) => isId(r.id) && isISODate(r.start) && isISODate(r.end),
 };
 function hasLegacyNoteFields(r) {
   return ['title', 'ingredients', 'steps', 'year', 'genre', 'comment'].some((k) => r[k] != null);
@@ -426,30 +428,54 @@ function normalizeNote(r) {
   delete o.kind; delete o.type; delete o.watched; delete o.rating;
   const text = [...(parts.length && !lines.length ? parts : lines.concat(parts))].join('\n');
   return {
-    id: o.id, text, pinned: !!o.pinned, order: Number.isFinite(o.order) ? o.order : 0,
-    folderId: isStr(o.folderId) ? o.folderId : null,
-    createdAt: o.createdAt || new Date(0).toISOString(), updatedAt: o.updatedAt || o.createdAt || new Date(0).toISOString(),
+    id: o.id, text: text.slice(0, NOTE_MAX), pinned: o.pinned === true, order: Number.isFinite(o.order) ? o.order : 0,
+    folderId: isId(o.folderId) ? o.folderId : null,
+    createdAt: str(o.createdAt) || new Date(0).toISOString(), updatedAt: str(o.updatedAt) || str(o.createdAt) || new Date(0).toISOString(),
   };
+}
+// Строгая нормализация: из копии берутся только известные поля нужного типа,
+// всё лишнее отбрасывается — подделанный или испорченный файл не может сломать приложение.
+const isTime = (t) => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+const num = (v, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+const str = (v, max = 64) => (typeof v === 'string' ? v.slice(0, max) : '');
+const isoList = (v) => (Array.isArray(v) ? [...new Set(v.filter(isISODate))].sort().slice(0, 5000) : []);
+export const NOTE_MAX = 100000;
+export function sanitizeRepeat(rep) {
+  if (!rep || typeof rep !== 'object') return null;
+  const kind = ['daily', 'weekdays', 'days', 'monthly'].includes(rep.kind) ? rep.kind : null;
+  if (!kind) return null;
+  const out = { kind };
+  if (kind === 'days') {
+    out.days = Array.isArray(rep.days) ? [...new Set(rep.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b) : [];
+    if (!out.days.length) return null;
+  }
+  if (isISODate(rep.until)) out.until = rep.until;
+  return out;
 }
 function normalizeRecord(section, r) {
   if (section === 'notes') return normalizeNote(r);
-  const o = stripSync(r);
   if (section === 'tasks') {
-    o.title = normalizeTitle(o.title);
-    o.time = o.time || null;
-    o.done = !!o.done; o.remind = !!o.remind;
-    o.repeat = o.repeat && o.repeat.kind ? o.repeat : null;
-    o.skip = Array.isArray(o.skip) ? o.skip.filter(isISODate) : [];
-    o.doneDates = Array.isArray(o.doneDates) ? o.doneDates.filter(isISODate) : [];
+    return {
+      id: r.id, date: r.date, title: normalizeTitle(r.title), time: isTime(r.time) ? r.time : null,
+      done: r.done === true, remind: r.remind === true && isTime(r.time), repeat: sanitizeRepeat(r.repeat),
+      skip: isoList(r.skip), doneDates: isoList(r.doneDates), movedFrom: isISODate(r.movedFrom) ? r.movedFrom : null,
+      seq: num(r.seq), createdAt: str(r.createdAt),
+    };
   }
-  if (section === 'purchases') { o.title = normalizeTitle(o.title); o.bought = !!o.bought; }
+  if (section === 'purchases') {
+    return { id: r.id, date: r.date, title: normalizeTitle(r.title), bought: r.bought === true, seq: num(r.seq), createdAt: str(r.createdAt) };
+  }
   if (section === 'birthdays') {
-    o.day = Number(o.day); o.month = Number(o.month);
-    o.year = o.year ? Number(o.year) : null;
-    o.note = normalizeTitle(o.note, BD_NOTE_MAX); o.remind = !!o.remind;
+    const year = Number(r.year);
+    return {
+      id: r.id, name: normalizeTitle(r.name, BD_NAME_MAX), day: Number(r.day), month: Number(r.month),
+      year: Number.isInteger(year) && year >= 1900 && year <= 2100 ? year : null,
+      note: typeof r.note === 'string' ? normalizeTitle(r.note, BD_NOTE_MAX) : '', remind: r.remind === true, createdAt: str(r.createdAt),
+    };
   }
-  if (section === 'noteFolders') { o.name = normalizeTitle(o.name, FOLDER_MAX); delete o.kind; delete o.type; }
-  return o;
+  if (section === 'noteFolders') return { id: r.id, name: normalizeTitle(r.name, FOLDER_MAX), order: num(r.order), createdAt: str(r.createdAt) };
+  if (section === 'vacations') return { id: r.id, start: r.start, end: r.end };
+  return null;
 }
 /**
  * Разбор файла копии. Возвращает { ok, error?, data, skipped, sections }.

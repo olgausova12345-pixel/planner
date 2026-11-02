@@ -11,6 +11,7 @@ window.Capacitor = { isNativePlatform: () => true, Plugins: {
     checkExactNotificationSetting: async () => ({ exact_alarm: __ln.exact }),
     changeExactNotificationSetting: async () => { __ln.exact = 'granted'; return { exact_alarm: 'granted' }; },
     createChannel: async (c) => { __ln.channels.push(c); },
+    deleteChannel: async (c) => { __ln.deleted = (__ln.deleted||[]).concat(c.id); },
     getPending: async () => ({ notifications: __ln.scheduled.map(n => ({ id: String(n.id) })) }),
     cancel: async ({ notifications }) => { const ids = new Set(notifications.map(n => n.id)); __ln.scheduled = __ln.scheduled.filter(n => !ids.has(n.id)); },
     schedule: async ({ notifications }) => { __ln.scheduled.push(...notifications); return { notifications }; },
@@ -32,7 +33,7 @@ with sync_playwright() as p:
     s=pg.evaluate("__ln.scheduled.map(n=>[n.title,n.body,new Date(n.schedule.at).toString().slice(0,21),n.channelId,n.smallIcon])")
     ok(f'поставлено напоминаний: {len(s)}', len(s)>10)
     for row in s[:5]: print('     ', row)
-    ok('канал «Напоминания» с высокой важностью', pg.evaluate("__ln.channels[0] && __ln.channels[0].importance===5"))
+    ok('канал «Напоминания» с высокой важностью, текст на экране блокировки — по настройке телефона', pg.evaluate("__ln.channels[0] && __ln.channels[0].importance===5 && __ln.channels[0].visibility===0 && __ln.deleted.includes('reminders')"))
     ok('нет кнопки «Установить» в Android-версии', not pg.is_visible('#btn-install-head') and pg.locator('.banner', has_text='Установите').count()==0)
     # изменение дела — перепланирование
     pg.evaluate("""() => { const t=[...window.__planner.data.tasks.values()].find(x=>x.title.startsWith('Поликлиника')); return window.__planner.apply([{store:'tasks',put:{...t,time:'16:00'}}]); }""")

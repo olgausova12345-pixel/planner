@@ -19,8 +19,10 @@ const SAVE_DELAY = 450;
 
 // ---------- Время (переопределяется в тестах через ?now=) ----------
 let timeShift = 0;
+// Подмена времени (?now=) работает только при запуске тестов на этом компьютере, не на сайте и не в APK.
+const IS_TEST_HOST = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port !== '';
 try {
-  const q = new URLSearchParams(location.search).get('now');
+  const q = IS_TEST_HOST && new URLSearchParams(location.search).get('now');
   if (q) timeShift = new Date(q).getTime() - Date.now();
 } catch { /* нет параметра */ }
 const now = () => new Date(Date.now() + timeShift);
@@ -1179,6 +1181,7 @@ $('restore-file').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
+  if (file.size > 20 * 1048576) { dialogs.info('Не удалось восстановить', [h('p', {}, 'Файл слишком большой для резервной копии Планировщика. Проверьте, что выбран правильный файл.')]); return; }
   let text = '';
   try { text = await file.text(); } catch { dialogs.info('Не удалось открыть файл', [h('p', {}, 'Попробуйте выбрать файл ещё раз.')]); return; }
   const res = L.parseBackup(text);
@@ -1493,6 +1496,6 @@ async function start() {
   window.addEventListener('scroll', () => { clearTimeout(start._s); start._s = setTimeout(saveUI, 300); }, { passive: true });
   document.addEventListener('close', () => updateBanners(), true);
   navigator.serviceWorker?.addEventListener('message', (e) => { if (e.data && e.data.type === 'OPEN') window.focus(); });
-  window.__planner = { data, state, db, apply, renderAll }; // для автотестов
+  if (IS_TEST_HOST) window.__planner = { data, state, db, apply, renderAll }; // только для автотестов
 }
 start();

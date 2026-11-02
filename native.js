@@ -6,7 +6,8 @@ const C = window.Capacitor;
 const available = !!(C && C.isNativePlatform && C.isNativePlatform());
 const P = available ? (C.Plugins || {}) : {};
 const LN = P.LocalNotifications;
-const CHANNEL = 'reminders';
+const CHANNEL = 'planner-reminders';
+const OLD_CHANNELS = ['reminders'];
 const DAYS_AHEAD = 21;
 const MAX_SCHEDULED = 120;
 
@@ -20,10 +21,11 @@ export function createNative(ctx) {
 
   async function ensureChannel() {
     if (channelReady || !LN) return;
+    for (const id of OLD_CHANNELS) { try { await LN.deleteChannel({ id }); } catch { /* не было */ } }
     try {
       await LN.createChannel({
         id: CHANNEL, name: 'Напоминания', description: 'Дела и дни рождения',
-        importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#FF8C1A',
+        importance: 5, visibility: 0, vibration: true, lights: true, lightColor: '#FF8C1A',
       });
     } catch (e) { console.warn('channel', e); }
     channelReady = true;
