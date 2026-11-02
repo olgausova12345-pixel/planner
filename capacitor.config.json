@@ -1,0 +1,15 @@
+{
+  "appId": "ru.planner.app",
+  "appName": "Планировщик",
+  "webDir": "www",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto",
+    "backgroundColor": "#F6F4EE"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_planner",
+      "iconColor": "#0B4F4A"
+    }
+  }
+}

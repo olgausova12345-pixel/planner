@@ -1,0 +1,75 @@
+# Автосборка Android-приложения: после каждого изменения в main собирается APK
+# и выкладывается во вкладку Releases. Ссылка на последнюю версию:
+# https://github.com/<владелец>/planner/releases/latest/download/planner.apk
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Проверка логики
+        run: node --test tests/logic.test.mjs
+
+      - name: Установка Capacitor
+        run: npm install --no-audit --no-fund
+
+      - name: Версия
+        id: ver
+        run: echo "version=$(node -p "require('./version.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Сборка Android-проекта
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          node scripts/build-www.mjs
+          npx cap add android
+          node scripts/patch-android.mjs
+          npx cap sync android
+
+      - name: Сборка APK
+        run: cd android && ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Подпись APK
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "::error::Нет секрета KEYSTORE_B64 — ключ подписи не настроен"; exit 1; fi
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          echo "$KEYSTORE_B64" | base64 -d > planner.jks
+          "$BT/zipalign" -p -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          "$BT/apksigner" sign --ks planner.jks --ks-key-alias planner \
+            --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_PASSWORD --out planner.apk aligned.apk
+          "$BT/apksigner" verify --print-certs planner.apk
+          rm planner.jks
+
+      - name: Публикация в Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}-${{ github.run_number }}
+          name: Планировщик ${{ steps.ver.outputs.version }}
+          body: |
+            Скачайте planner.apk на телефон и откройте его, чтобы установить или обновить приложение.
+            Записи при обновлении сохраняются.
+          files: planner.apk
+          make_latest: true

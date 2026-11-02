@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ru" data-layout="narrow">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="theme-color" content="#0B4F4A">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Планировщик: план дел, покупки, заметки и дни рождения. Работает без интернета, записи хранятся только на телефоне.">
+<title>Планировщик</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<script src="./boot.js?v=2026.11.02-1"></script>
+<link rel="stylesheet" href="./styles.css?v=2026.11.02-1">
+<script type="module" src="./app.js?v=2026.11.02-1"></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="i-plan" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14.5l2 2 4-4"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M2.5 3.5h2.6l2.3 11.2h11l2-8H6.3"/><circle cx="9" cy="19.5" r="1.6"/><circle cx="17" cy="19.5" r="1.6"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3.5h10l4 4v13H5z"/><path d="M15 3.5v4h4M8.5 12h7M8.5 16h5"/></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><path d="M4 20.5h16v-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/><path d="M4 15.5c2 1.5 4 1.5 5.3 0 1.4 1.5 4 1.5 5.4 0 1.3 1.5 3.3 1.5 5.3 0M12 11.5V8"/><path d="M12 3.5c1.2 1.3 1.2 2.6 0 3.5-1.2-.9-1.2-2.2 0-3.5z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9a3 3 0 0 1 3-3h12l-3-3M20 13v2a3 3 0 0 1-3 3H5l3 3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9.5 6.5V4h5v2.5M6 6.5l1 14h10l1-14M10 10.5v6M14 10.5v6"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3.5h6l-1 6 3.5 3.5h-11L10 9.5zM12 13v7.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4.5 16.5v3h15v-3"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4.5 16.5v3h15v-3"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.5v.5"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M3.5 19l5-14h1l5 14M5.3 14.5h7.4M15.5 19l3-8.5h.5l3 8.5M16.4 16.5h4.2"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17.5" r="1"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12.5H6z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></symbol>
+    <symbol id="i-hours" viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h16M4 20h16"/><path d="M8 3v19"/></symbol>
+    <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-arrup" viewBox="0 0 24 24"><path d="M12 20V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-arrdown" viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-pumpkin" viewBox="0 0 24 24"><path d="M12 7.5c-4.6 0-8.5 2.9-8.5 6.6S7.4 20.5 12 20.5s8.5-2.7 8.5-6.4S16.6 7.5 12 7.5z"/><path d="M12 7.5c-2.2 2.4-2.2 10.6 0 13M12 7.5c2.2 2.4 2.2 10.6 0 13M12 7.5V4.8c0-.9.8-1.6 2-1.8"/></symbol>
+  </defs>
+</svg>
+
+<div id="banner-area" class="banner-area" aria-live="polite"></div>
+
+<header class="top">
+  <h1 class="top-title" id="top-title">План</h1>
+  <nav class="tabs-top" aria-label="Разделы" id="nav-top"></nav>
+  <button class="btn-install-head" id="btn-install-head" type="button" hidden>
+    <svg class="ic"><use href="#i-install"/></svg><span>Установить</span>
+  </button>
+</header>
+
+<main id="main">
+  <!-- ПЛАН -->
+  <section class="view" id="view-plan" data-view="plan" aria-labelledby="top-title">
+    <div class="seg" role="tablist" aria-label="Режим плана">
+      <button role="tab" type="button" data-mode="day">День</button>
+      <button role="tab" type="button" data-mode="week">Неделя</button>
+      <button role="tab" type="button" data-mode="month">Месяц</button>
+    </div>
+    <div class="datebar" data-scope="plan">
+      <button class="icon-btn" type="button" data-act="prev" aria-label="Назад"><svg class="ic"><use href="#i-left"/></svg></button>
+      <button class="datebar-title" type="button" data-act="pick">
+        <span class="dt-main"></span><span class="dt-sub"></span>
+      </button>
+      <button class="icon-btn" type="button" data-act="next" aria-label="Вперёд"><svg class="ic"><use href="#i-right"/></svg></button>
+    </div>
+    <div class="quick-row">
+      <button class="chip-btn" type="button" data-act="today">Сегодня</button>
+      <button class="chip-btn" type="button" data-act="tomorrow">Завтра</button>
+      <button class="chip-btn" type="button" id="btn-back-week" hidden><svg class="ic"><use href="#i-left"/></svg><span>К неделе</span></button>
+      <button class="chip-btn" type="button" id="btn-hours"><svg class="ic"><use href="#i-hours"/></svg><span>По часам</span></button>
+    </div>
+    <div id="plan-body" class="plan-body"></div>
+  </section>
+
+  <!-- ПОКУПКИ -->
+  <section class="view" id="view-shop" data-view="shop" hidden>
+    <div class="datebar" data-scope="shop">
+      <button class="icon-btn" type="button" data-act="prev" aria-label="Предыдущий день"><svg class="ic"><use href="#i-left"/></svg></button>
+      <button class="datebar-title" type="button" data-act="pick">
+        <span class="dt-main"></span><span class="dt-sub"></span>
+      </button>
+      <button class="icon-btn" type="button" data-act="next" aria-label="Следующий день"><svg class="ic"><use href="#i-right"/></svg></button>
+    </div>
+    <div class="quick-row">
+      <button class="chip-btn" type="button" data-act="today">Сегодня</button>
+      <button class="chip-btn" type="button" data-act="tomorrow">Завтра</button>
+    </div>
+    <div id="shop-body"></div>
+  </section>
+
+  <!-- ЗАМЕТКИ -->
+  <section class="view" id="view-notes" data-view="notes" hidden>
+    <div class="notes-wrap">
+      <div class="notes-list-pane" id="notes-list-pane">
+        <div class="chips" id="folder-chips" role="tablist" aria-label="Папки"></div>
+        <div class="folder-actions" id="folder-actions" hidden>
+          <button class="chip-btn" type="button" id="btn-folder-rename"><svg class="ic"><use href="#i-edit"/></svg><span>Переименовать</span></button>
+          <button class="chip-btn danger" type="button" id="btn-folder-delete"><svg class="ic"><use href="#i-trash"/></svg><span>Удалить папку</span></button>
+        </div>
+        <div class="search">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input id="notes-search" type="search" placeholder="Поиск по заметкам" aria-label="Поиск по заметкам" autocomplete="off">
+        </div>
+        <button class="btn primary wide" type="button" id="btn-new-note"><svg class="ic"><use href="#i-plus"/></svg><span>Новая заметка</span></button>
+        <ul class="notes-list" id="notes-list"></ul>
+      </div>
+      <div class="notes-editor-pane" id="notes-editor-pane">
+        <div class="editor-head">
+          <button class="chip-btn" type="button" id="btn-to-list"><svg class="ic"><use href="#i-left"/></svg><span>К списку</span></button>
+          <span class="save-status" id="save-status" aria-live="polite"></span>
+        </div>
+        <div class="editor-empty" id="editor-empty">Выберите заметку или создайте новую.</div>
+        <div class="editor" id="editor" hidden>
+          <label class="field-label" for="note-folder">Папка</label>
+          <select id="note-folder" class="select"></select>
+          <textarea id="note-text" class="note-text" placeholder="Текст заметки. Первая строка — заголовок." aria-label="Текст заметки"></textarea>
+          <div class="editor-actions">
+            <button class="chip-btn" type="button" id="btn-note-pin"><svg class="ic"><use href="#i-pin"/></svg><span>Закрепить</span></button>
+            <button class="chip-btn danger" type="button" id="btn-note-delete"><svg class="ic"><use href="#i-trash"/></svg><span>Удалить</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ДНИ РОЖДЕНИЯ -->
+  <section class="view" id="view-bd" data-view="bd" hidden>
+    <div class="bd-head">
+      <p class="muted" id="bd-count"></p>
+      <button class="btn primary" type="button" id="btn-bd-add"><svg class="ic"><use href="#i-plus"/></svg><span>Добавить</span></button>
+    </div>
+    <div id="bd-list"></div>
+  </section>
+
+  <!-- МЕНЮ -->
+  <section class="view" id="view-menu" data-view="menu" hidden>
+    <div class="card">
+      <h2 class="card-title"><svg class="ic"><use href="#i-text"/></svg>Размер текста</h2>
+      <div class="scale-row">
+        <button class="icon-btn big" type="button" id="scale-minus" aria-label="Уменьшить текст"><span aria-hidden="true">А−</span></button>
+        <output id="scale-value" class="scale-value" aria-live="polite">100%</output>
+        <button class="icon-btn big" type="button" id="scale-plus" aria-label="Увеличить текст"><span aria-hidden="true">А+</span></button>
+      </div>
+      <p class="sample">Пример: Купить хлеб и молоко</p>
+      <button class="btn" type="button" id="scale-reset">Сбросить к 100%</button>
+    </div>
+    <div class="card">
+      <h2 class="card-title"><svg class="ic"><use href="#i-sun"/></svg>Тема</h2>
+      <div class="seg seg-col" role="radiogroup" aria-label="Тема" id="theme-seg">
+        <button type="button" role="radio" data-theme-v="light"><svg class="ic"><use href="#i-sun"/></svg>Светлая</button>
+        <button type="button" role="radio" data-theme-v="dark"><svg class="ic"><use href="#i-moon"/></svg>Тёмная</button>
+        <button type="button" role="radio" data-theme-v="auto"><svg class="ic"><use href="#i-phone"/></svg>Как в телефоне</button>
+        <button type="button" role="radio" data-theme-v="halloween"><svg class="ic"><use href="#i-pumpkin"/></svg>Хэллоуин</button>
+      </div>
+    </div>
+    <div class="card" id="card-install">
+      <h2 class="card-title"><svg class="ic"><use href="#i-install"/></svg>Установка на телефон</h2>
+      <p>Значок на главном экране — приложение открывается одним нажатием и работает без интернета.</p>
+      <button class="btn primary wide" type="button" id="btn-install-menu"><svg class="ic"><use href="#i-install"/></svg><span>Установить</span></button>
+      <button class="btn wide" type="button" id="btn-install-help">Как установить</button>
+    </div>
+    <div class="card">
+      <h2 class="card-title"><svg class="ic"><use href="#i-save"/></svg>Резервная копия</h2>
+      <p>Сохраните копию себе в мессенджер или на почту. Если телефон потеряется или сломается, записи можно будет восстановить.</p>
+      <p class="muted" id="backup-last"></p>
+      <button class="btn primary wide" type="button" id="btn-backup"><svg class="ic"><use href="#i-save"/></svg><span>Сохранить копию</span></button>
+      <button class="btn wide" type="button" id="btn-restore"><svg class="ic"><use href="#i-restore"/></svg><span>Восстановить из файла</span></button>
+      <input type="file" id="restore-file" accept=".json,.txt,application/json,text/plain" hidden>
+    </div>
+    <div class="card">
+      <h2 class="card-title"><svg class="ic"><use href="#i-info"/></svg>Где хранятся записи</h2>
+      <p>Только на этом телефоне. Интернет и облако не используются.</p>
+      <button class="btn wide" type="button" id="btn-storage-info">Подробнее</button>
+    </div>
+    <div class="card">
+      <h2 class="card-title"><svg class="ic"><use href="#i-bell"/></svg>Напоминания</h2>
+      <p class="web-only">Напоминания срабатывают, пока приложение открыто.</p>
+      <p class="native-only">Напоминания приходят, даже когда приложение закрыто.</p>
+      <button class="btn wide" type="button" id="btn-remind-help">Как включить уведомления</button>
+    </div>
+    <p class="version muted" id="app-version"></p>
+  </section>
+</main>
+
+<nav class="tabs-bottom" aria-label="Разделы" id="nav-bottom">
+  <button type="button" data-view="plan"><svg class="ic"><use href="#i-plan"/></svg><span>План</span></button>
+  <button type="button" data-view="shop"><svg class="ic"><use href="#i-cart"/></svg><span>Покупки</span></button>
+  <button type="button" data-view="notes"><svg class="ic"><use href="#i-note"/></svg><span>Заметки</span></button>
+  <button type="button" data-view="bd"><svg class="ic"><use href="#i-cake"/></svg><span>ДР</span></button>
+  <button type="button" data-view="menu"><svg class="ic"><use href="#i-menu"/></svg><span>Меню</span></button>
+</nav>
+
+<div id="toast-area" class="toast-area" aria-live="polite"></div>
+
+<!-- Диалог дела -->
+<dialog id="dlg-task" class="dlg" aria-labelledby="dlg-task-title">
+  <form method="dialog" class="dlg-form" novalidate>
+    <h2 id="dlg-task-title" class="dlg-title">Новое дело</h2>
+    <label class="field-label" for="t-title">Что сделать</label>
+    <textarea id="t-title" class="input" rows="2" maxlength="300" required></textarea>
+    <p class="field-error" id="t-title-err" hidden></p>
+    <span class="field-label" id="t-date-label">Дата</span>
+    <button id="t-date" class="input date-field" type="button" aria-describedby="t-date-label"></button>
+    <label class="field-label" for="t-time">Время</label>
+    <select id="t-time" class="select"></select>
+    <label class="check-row" id="t-remind-row" hidden><input type="checkbox" id="t-remind"><span>Напомнить за 15 минут</span></label>
+    <p class="hint" id="t-remind-hint" hidden>Напоминание сработает, если приложение будет открыто.</p>
+    <label class="field-label" for="t-repeat">Повтор</label>
+    <select id="t-repeat" class="select">
+      <option value="">Не повторять</option>
+      <option value="daily">Каждый день</option>
+      <option value="weekdays">По будням</option>
+      <option value="days">По дням недели</option>
+      <option value="monthly">Каждый месяц</option>
+    </select>
+    <div class="wd-toggles" id="t-days" hidden role="group" aria-label="Дни недели"></div>
+    <p class="field-error" id="t-days-err" hidden></p>
+    <p class="hint" id="t-monthly-hint" hidden></p>
+    <div id="t-until-wrap" hidden>
+      <label class="field-label" for="t-until-mode">Окончание повторов</label>
+      <select id="t-until-mode" class="select"><option value="">Без срока</option><option value="date">До даты</option></select>
+      <button id="t-until" class="input date-field" type="button" hidden aria-label="Дата окончания повторов"></button>
+      <p class="field-error" id="t-until-err" hidden></p>
+    </div>
+    <p class="hint warn" id="t-repeat-warn" hidden>Изменения применятся ко всем повторам этого дела.</p>
+    <div class="dlg-actions">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit" id="t-save">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Выбор даты -->
+<dialog id="dlg-date" class="dlg" aria-labelledby="dlg-date-title">
+  <div class="dlg-form">
+    <h2 id="dlg-date-title" class="dlg-title">Выберите дату</h2>
+    <div class="mini-cal-head">
+      <button class="icon-btn" type="button" id="mc-prev" aria-label="Предыдущий месяц"><svg class="ic"><use href="#i-left"/></svg></button>
+      <strong id="mc-title"></strong>
+      <button class="icon-btn" type="button" id="mc-next" aria-label="Следующий месяц"><svg class="ic"><use href="#i-right"/></svg></button>
+    </div>
+    <div class="mini-cal" id="mc-grid"></div>
+    <div class="dlg-actions">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn" type="button" id="mc-today">Сегодня</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Универсальный выбор / подтверждение -->
+<dialog id="dlg-choice" class="dlg" aria-labelledby="dlg-choice-title">
+  <div class="dlg-form">
+    <h2 id="dlg-choice-title" class="dlg-title"></h2>
+    <p id="dlg-choice-text" class="dlg-text"></p>
+    <div id="dlg-choice-list" class="choice-list"></div>
+  </div>
+</dialog>
+
+<!-- Ввод текста -->
+<dialog id="dlg-prompt" class="dlg" aria-labelledby="dlg-prompt-title">
+  <form method="dialog" class="dlg-form" novalidate>
+    <h2 id="dlg-prompt-title" class="dlg-title"></h2>
+    <label class="field-label" for="p-input" id="p-label"></label>
+    <input id="p-input" class="input" type="text" autocomplete="off">
+    <p class="field-error" id="p-err" hidden></p>
+    <div class="dlg-actions">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit" id="p-ok">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Покупки окончены -->
+<dialog id="dlg-shopdone" class="dlg" aria-labelledby="dlg-shopdone-title">
+  <form method="dialog" class="dlg-form" novalidate>
+    <h2 id="dlg-shopdone-title" class="dlg-title">Покупки окончены</h2>
+    <p class="dlg-text" id="sd-text"></p>
+    <fieldset class="radio-list" id="sd-options">
+      <legend class="field-label">Что сделать с некупленным?</legend>
+      <label class="radio-row"><input type="radio" name="sd" value="today"><span id="sd-today-label">Перенести на сегодня</span></label>
+      <label class="radio-row"><input type="radio" name="sd" value="tomorrow"><span id="sd-tomorrow-label">Перенести на завтра</span></label>
+      <label class="radio-row"><input type="radio" name="sd" value="date"><span>Перенести на дату</span></label>
+      <button id="sd-date" class="input date-field" type="button" hidden aria-label="Дата переноса"></button>
+      <label class="radio-row"><input type="radio" name="sd" value="delete"><span>Тоже удалить</span></label>
+    </fieldset>
+    <div class="dlg-actions">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit">Готово</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- День рождения -->
+<dialog id="dlg-bd" class="dlg" aria-labelledby="dlg-bd-title">
+  <form method="dialog" class="dlg-form" novalidate>
+    <h2 id="dlg-bd-title" class="dlg-title">День рождения</h2>
+    <label class="field-label" for="b-name">Имя</label>
+    <input id="b-name" class="input" type="text" maxlength="120" autocomplete="off">
+    <p class="field-error" id="b-name-err" hidden></p>
+    <div class="row2">
+      <div><label class="field-label" for="b-day">День</label><select id="b-day" class="select"></select></div>
+      <div><label class="field-label" for="b-month">Месяц</label><select id="b-month" class="select"></select></div>
+    </div>
+    <p class="field-error" id="b-day-err" hidden></p>
+    <p class="hint" id="b-feb29" hidden>В невисокосный год отметим 28 февраля.</p>
+    <label class="field-label" for="b-year">Год рождения (можно не указывать)</label>
+    <input id="b-year" class="input" type="text" inputmode="numeric" maxlength="4" placeholder="например, 1965" autocomplete="off">
+    <p class="field-error" id="b-year-err" hidden></p>
+    <label class="field-label" for="b-note">Заметка</label>
+    <input id="b-note" class="input" type="text" maxlength="300" autocomplete="off">
+    <label class="check-row"><input type="checkbox" id="b-remind"><span>Напомнить накануне и в день</span></label>
+    <div class="dlg-actions">
+      <button class="btn danger" type="button" id="b-delete" hidden>Удалить</button>
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- По часам -->
+<dialog id="dlg-hours" class="dlg sheet" aria-labelledby="dlg-hours-title">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2 id="dlg-hours-title" class="dlg-title">По часам</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Закрыть"><svg class="ic"><use href="#i-close"/></svg></button>
+    </div>
+    <p class="muted" id="hours-sub"></p>
+    <div class="hours" id="hours-grid"></div>
+  </div>
+</dialog>
+
+<!-- Информационное окно -->
+<dialog id="dlg-info" class="dlg" aria-labelledby="dlg-info-title">
+  <div class="dlg-form">
+    <h2 id="dlg-info-title" class="dlg-title"></h2>
+    <div id="dlg-info-body" class="info-body"></div>
+    <div class="dlg-actions">
+      <button class="btn primary" type="button" data-close>Понятно</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Напоминание -->
+<dialog id="dlg-alert" class="dlg alert" aria-labelledby="dlg-alert-title">
+  <div class="dlg-form">
+    <div class="alert-ic"><svg class="ic"><use href="#i-bell"/></svg></div>
+    <h2 id="dlg-alert-title" class="dlg-title"></h2>
+    <p id="dlg-alert-text" class="dlg-text big"></p>
+    <div class="dlg-actions">
+      <button class="btn primary wide" type="button" data-close>Хорошо</button>
+    </div>
+  </div>
+</dialog>
+</body>
+</html>
