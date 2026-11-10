@@ -303,3 +303,17 @@ test('копия: подделанный файл не может испорти
   assert.equal(p.data.notes[0].folderId, null); assert.equal(p.data.notes[0].pinned, false);
   assert.equal(L.sanitizeRepeat({ kind: 'days', days: [1, 1, 9, 'x', 3] }).days.join(), '1,3');
 });
+
+test('время дел: 7:00–21:00 с шагом 15 минут, «По часам» через 30 минут', () => {
+  const t = L.timeSlots();
+  assert.equal(t[0], '07:00'); assert.equal(t[1], '07:15'); assert.equal(t.at(-1), '21:00');
+  assert.equal(t.length, 57);
+  const h = L.hourSlots();
+  assert.equal(h[0], '07:00'); assert.equal(h[1], '07:30'); assert.equal(h.at(-1), '21:00');
+  assert.ok(L.isValidTime('06:40')); assert.ok(L.isValidTime('23:59'));
+  assert.ok(!L.isValidTime('24:00')); assert.ok(!L.isValidTime('7:5'));
+  // своё время работает с напоминанием за 15 минут
+  const task = { id: 'c1', date: '2026-11-10', title: 'Собака', time: '06:40', remind: true, repeat: null, skip: [], doneDates: [] };
+  const d = L.parseISO('2026-11-10'); d.setHours(6, 25, 0, 0);
+  assert.equal(L.dueReminders([task], d).length, 1);
+});

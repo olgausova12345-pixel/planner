@@ -314,6 +314,7 @@ function setView(v) {
     if (b.dataset.view === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   }
   $('top-title').textContent = VIEW_TITLES[v];
+  requestAnimationFrame(fitHeaderDeco);
   renderAll();
   window.scrollTo(0, 0);
   saveUI();
@@ -322,6 +323,23 @@ $('nav-bottom').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-view]');
   if (b) setView(b.dataset.view);
 });
+
+// ---------- Украшение в шапке праздничных тем: только в свободном месте справа от названия ----------
+function fitHeaderDeco() {
+  const top = document.querySelector('.top'), title = $('top-title');
+  if (!top || !title || !title.firstChild) return;
+  const r = document.createRange(); r.selectNodeContents(title);
+  let textRight = r.getBoundingClientRect().right;
+  const after = getComputedStyle(title, '::after');
+  if (after.content && after.content !== 'none') textRight += (parseFloat(after.width) || 0) + (parseFloat(after.marginLeft) || 0);
+  const tb = top.getBoundingClientRect();
+  const btn = $('btn-install-head');
+  const limit = btn && !btn.hidden && btn.offsetWidth ? btn.getBoundingClientRect().left - 6 : tb.right - (parseFloat(getComputedStyle(top).paddingRight) || 0);
+  const avail = limit - textRight - 8;
+  root.style.setProperty('--deco-w', `${avail < 48 ? 0 : Math.round(avail)}px`);
+  root.style.setProperty('--deco-r', `${Math.max(4, Math.round(tb.right - limit))}px`);
+}
+window.addEventListener('resize', () => requestAnimationFrame(fitHeaderDeco));
 
 // ---------- Раскладка по ширине в rem ----------
 function remPx() { return parseFloat(getComputedStyle(root).fontSize) || 24; }
@@ -695,7 +713,7 @@ function openHours() {
   const t = today();
   $('hours-sub').textContent = `${L.formatDayTitle(iso, t)}${L.relativeLabel(iso, t) ? ' · ' + L.relativeLabel(iso, t) : ''}. Нажмите на время, чтобы добавить дело.`;
   const list = L.tasksForDate(tasksArr(), iso).filter((x) => x.time);
-  const slots = L.timeSlots();
+  const slots = L.hourSlots();
   const extra = [...new Set(list.map((x) => x.time).filter((tm) => !slots.includes(tm)))];
   const rows = [...slots.map((s) => ({ time: s, out: false })), ...extra.map((s) => ({ time: s, out: true }))]
     .sort((a, b) => L.minutesOf(a.time) - L.minutesOf(b.time));
@@ -729,6 +747,9 @@ let tDays = new Set();
   const sel = $('t-time');
   sel.append(h('option', { value: '' }, 'Без времени'));
   for (const s of L.timeSlots()) sel.append(h('option', { value: s }, L.formatTime(s)));
+  sel.append(h('option', { value: 'custom' }, 'Своё время…'));
+  for (let i = 0; i < 24; i++) $('t-hh').append(h('option', { value: String(i).padStart(2, '0') }, String(i)));
+  for (let i = 0; i < 60; i++) $('t-mm').append(h('option', { value: String(i).padStart(2, '0') }, String(i).padStart(2, '0')));
   const days = $('t-days');
   L.WEEKDAYS_SHORT.forEach((w, i) => days.append(h('button', {
     type: 'button', attrs: { 'aria-pressed': 'false', 'aria-label': L.WEEKDAYS[i] },
@@ -741,8 +762,16 @@ let tDays = new Set();
   $('t-remind').addEventListener('change', (e) => { if (e.target.checked) notify.ask(); });
   tDlg.querySelector('form').addEventListener('submit', saveTask);
 })();
+/** Выбранное в окне дела время: 'ЧЧ:ММ' или null */
+function taskDialogTime() {
+  const v = $('t-time').value;
+  if (v === 'custom') return `${$('t-hh').value}:${$('t-mm').value}`;
+  return v || null;
+}
 function syncTaskDialog() {
   const hasTime = !!$('t-time').value;
+  const custom = $('t-time').value === 'custom';
+  $('t-custom').hidden = !custom;
   $('t-remind-row').hidden = !hasTime;
   $('t-remind-hint').hidden = !hasTime;
   const rep = $('t-repeat').value;
@@ -767,8 +796,10 @@ function openTaskDialog(task, { date, time } = {}) {
   $('t-date').value = task ? task.date : (date || state.date);
   const sel = $('t-time');
   const tm = task ? task.time : (time || '');
-  if (tm && ![...sel.options].some((o) => o.value === tm)) sel.append(h('option', { value: tm }, L.formatTime(tm)));
-  sel.value = tm || '';
+  const inList = !tm || L.timeSlots().includes(tm);
+  sel.value = inList ? (tm || '') : 'custom';
+  const [hh, mm] = (tm && !inList ? tm : '12:00').split(':');
+  $('t-hh').value = hh; $('t-mm').value = mm;
   $('t-remind').checked = task ? !!task.remind : false;
   $('t-repeat').value = task && task.repeat ? task.repeat.kind : '';
   tDays = new Set(task && task.repeat && task.repeat.days ? task.repeat.days : [L.weekday(date || state.date)]);
@@ -802,7 +833,7 @@ async function saveTask(e) {
     } else err('t-until-err', '');
   }
   if (bad) return;
-  const time = $('t-time').value || null;
+  const time = taskDialogTime();
   const remind = !!time && $('t-remind').checked;
   const n = now();
   let rec;
@@ -1115,21 +1146,25 @@ function applyScale(s) {
   ls.set('scale', String(s));
   $('scale-value').textContent = `${Math.round(s * 100)}%`;
   updateLayout();
+  requestAnimationFrame(fitHeaderDeco);
 }
 const curScale = () => parseFloat(getComputedStyle(root).getPropertyValue('--scale')) || 1;
 $('scale-minus').addEventListener('click', () => applyScale(curScale() - 0.1));
 $('scale-plus').addEventListener('click', () => applyScale(curScale() + 0.1));
 $('scale-reset').addEventListener('click', () => applyScale(1));
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
+// Праздничные темы: цвет системной строки и тёмная ли тема
+const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true] };
 function applyTheme(pref) {
   ls.set('theme', pref);
-  const hw = pref === 'halloween';
-  const dark = hw || pref === 'dark' || (pref === 'auto' && darkMQ.matches);
-  root.dataset.theme = hw ? 'halloween' : (dark ? 'dark' : 'light');
+  const fest = FESTIVE[pref];
+  const dark = fest ? fest[1] : (pref === 'dark' || (pref === 'auto' && darkMQ.matches));
+  root.dataset.theme = fest ? pref : (dark ? 'dark' : 'light');
   root.dataset.themePref = pref;
   root.style.colorScheme = dark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', hw ? '#140B1A' : (dark ? '#0E1716' : '#0B4F4A'));
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', fest ? fest[0] : (dark ? '#0E1716' : '#0B4F4A'));
   for (const b of document.querySelectorAll('#theme-seg [data-theme-v]')) b.setAttribute('aria-checked', String(b.dataset.themeV === pref));
+  requestAnimationFrame(fitHeaderDeco);
 }
 darkMQ.addEventListener('change', () => { if ((ls.get('theme') || 'auto') === 'auto') applyTheme('auto'); });
 $('theme-seg').addEventListener('click', (e) => { const b = e.target.closest('[data-theme-v]'); if (b) applyTheme(b.dataset.themeV); });
@@ -1362,6 +1397,7 @@ function installLater() { session.installLater = true; ls.set('installLater', St
 function isInstalled() { return isStandalone() || ls.get('installed') === '1'; }
 /** Кнопки «Установить» видны, пока приложение не установлено, и пропадают после установки */
 function syncInstallUI() {
+  requestAnimationFrame(fitHeaderDeco);
   const installed = isInstalled();
   $('btn-install-head').hidden = installed;
   $('card-install').hidden = installed;

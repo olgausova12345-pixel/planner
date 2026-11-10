@@ -378,6 +378,42 @@ def run_install(browser):
     ctx.close()
 
 
+def run_custom_time_and_themes(browser):
+    print('\n== своё время и праздничные темы ==')
+    ctx, page = new_page(browser, 412, 915)
+    page.evaluate(SEED); page.reload(); page.wait_for_function('window.__planner'); page.wait_for_selector('#plan-body .task')
+    page.get_by_role('button', name='Добавить дело').click()
+    opts = page.eval_on_selector_all('#t-time option', 'os => os.map(o => o.value)')
+    check('время в окне дела: 7:00…21:00 и «Своё время»', opts[1] == '07:00' and opts[2] == '07:15' and '21:00' in opts and opts[-1] == 'custom')
+    page.fill('#t-title', 'Выгулять собаку')
+    page.select_option('#t-time', 'custom')
+    check('«Своё время» показывает часы и минуты', page.is_visible('#t-hh') and page.is_visible('#t-mm'))
+    page.select_option('#t-hh', '06'); page.select_option('#t-mm', '40'); page.check('#t-remind')
+    page.click('#t-save'); page.wait_for_timeout(300)
+    t = page.evaluate("[...window.__planner.data.tasks.values()].find(x => x.title === 'Выгулять собаку')")
+    check('своё время 6:40 сохранено с напоминанием', t and t['time'] == '06:40' and t['remind'])
+    page.locator('.task', has_text='Выгулять собаку').locator('button[aria-label^="Действия"]').click()
+    page.get_by_role('button', name='Изменить').click(); page.wait_for_timeout(200)
+    check('при изменении открывается «Своё время» 6:40', page.input_value('#t-time') == 'custom' and page.input_value('#t-hh') == '06' and page.input_value('#t-mm') == '40')
+    page.keyboard.press('Escape'); page.wait_for_timeout(200)
+    page.click('#btn-hours'); page.wait_for_timeout(300)
+    rows = page.locator('.hour-row .hour-btn').all_inner_texts()
+    check('«По часам» с 7:00 до 21:00 и строка для 6:40', rows[0] == '6:40' and '7:00' in rows and rows[-1] == '21:00')
+    page.keyboard.press('Escape'); page.wait_for_timeout(200)
+    for th, color in [('newyear', '#0B1630'), ('patrick', '#0E2214'), ('halloween', '#140B1A')]:
+        nav(page, 'Меню'); page.locator(f'#theme-seg [data-theme-v="{th}"]').click(); page.wait_for_timeout(200)
+        ok = page.evaluate(f"document.documentElement.dataset.theme === '{th}' && document.querySelector('meta[name=theme-color]').content === '{color}'")
+        for v in ['План', 'Покупки', 'Заметки', 'ДР']:
+            nav(page, v)
+        wide = page.evaluate('document.documentElement.scrollWidth') <= 412
+        check(f'тема {th}: включается, все разделы без сдвига вбок', ok and wide)
+        shot(page, f'21-theme-{th}')
+    page.reload(); page.wait_for_function('window.__planner')
+    check('тема сохраняется после перезапуска', page.evaluate("document.documentElement.dataset.theme") == 'halloween')
+    check('нет ошибок JavaScript', not page.errors)
+    ctx.close()
+
+
 def run_layout(browser, w, h, landscape=False, dark=False, scale=None, name=None):
     label = f'{w}×{h} {"горизонтально" if landscape else "вертикально"}{" тёмная" if dark else ""}{f" масштаб {scale}" if scale else ""}'
     print(f'\n== {label} ==')
@@ -417,6 +453,7 @@ def main():
         run_reminder(browser)
         run_offline(browser)
         run_install(browser)
+        run_custom_time_and_themes(browser)
         run_layout(browser, 412, 915, dark=True, name='15-dark')
         run_layout(browser, 412, 915, landscape=True, name='16-landscape')
         run_layout(browser, 360, 780, scale='1.5', name='20-scale150-360')

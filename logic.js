@@ -74,11 +74,14 @@ export function minutesOf(time) {
 }
 export function nowMinutes(now) { return now.getHours() * 60 + now.getMinutes(); }
 /** Варианты времени 9:00–19:00 с шагом 30 минут */
-export function timeSlots() {
-  const out = [];
-  for (let m = 9 * 60; m <= 19 * 60; m += 30) out.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`);
-  return out;
-}
+export const DAY_START = 7 * 60;
+export const DAY_END = 21 * 60;
+const slots = (step) => { const out = []; for (let m = DAY_START; m <= DAY_END; m += step) out.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`); return out; };
+/** Варианты времени в окне дела: 7:00–21:00 с шагом 15 минут */
+export function timeSlots() { return slots(15); }
+/** Строки шторки «По часам»: 7:00–21:00 через 30 минут (дела на другое время получают свою строку) */
+export function hourSlots() { return slots(30); }
+export function isValidTime(t) { return typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t); }
 export function formatTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':');
