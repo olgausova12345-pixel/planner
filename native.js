@@ -126,5 +126,39 @@ export function createNative(ctx) {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') fn(); });
   }
 
-  return { available, status, requestPermission, openExactSettings, reschedule, shareBackup, onOpen, onResume };
+  // ---------- Обновление приложения с GitHub (только номер версии; записи никуда не отправляются) ----------
+  const REPO_API = 'https://api.github.com/repos/olgausova12345-pixel/planner/releases/latest';
+  const APK_PREFIX = 'https://github.com/olgausova12345-pixel/planner/releases/download/';
+  async function appInfo() {
+    try { return await P.App.getInfo(); } catch { return null; }
+  }
+  /** { available, version, current, url } или исключение, если нет сети */
+  async function checkUpdate() {
+    const info = await appInfo();
+    if (!info) return { available: false };
+    const r = await fetch(REPO_API, { cache: 'no-store', headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) throw new Error(`GitHub ответил ${r.status}`);
+    const d = await r.json();
+    const tag = String(d.tag_name || '');
+    const m = /^v(.+)-(\d+)$/.exec(tag);
+    const build = m ? Number(m[2]) : 0;
+    const asset = (d.assets || []).find((a) => a.name === 'planner.apk');
+    const url = asset && String(asset.browser_download_url || '');
+    const ok = !!(url && url.startsWith(APK_PREFIX));
+    return { available: ok && build > Number(info.build || 0), version: m ? m[1] : tag, current: info.version, url: ok ? url : null };
+  }
+  /** Скачать APK и открыть установщик Android. onProgress(0..1) */
+  async function installUpdate(url, onProgress) {
+    const FS = P.Filesystem, FO = P.FileOpener;
+    if (!FS || !FO || !url || !url.startsWith(APK_PREFIX)) throw new Error('Обновление недоступно');
+    let sub = null;
+    try { sub = await FS.addListener('progress', (e) => { if (onProgress && e.contentLength) onProgress(e.bytes / e.contentLength); }); } catch { /* без прогресса */ }
+    try {
+      await FS.downloadFile({ url, path: 'planner-update.apk', directory: 'CACHE', progress: true });
+    } finally { try { sub && sub.remove(); } catch { /* нет */ } }
+    const { uri } = await FS.getUri({ path: 'planner-update.apk', directory: 'CACHE' });
+    await FO.openFile({ path: uri, mimeType: 'application/vnd.android.package-archive' });
+  }
+
+  return { available, status, requestPermission, openExactSettings, reschedule, shareBackup, onOpen, onResume, appInfo, checkUpdate, installUpdate };
 }

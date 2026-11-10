@@ -14,7 +14,8 @@
     "@capacitor/core": "^7.0.0",
     "@capacitor/filesystem": "^7.0.0",
     "@capacitor/local-notifications": "^7.0.0",
-    "@capacitor/share": "^7.0.0"
+    "@capacitor/share": "^7.0.0",
+    "@capawesome-team/capacitor-file-opener": "^7.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0"

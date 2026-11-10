@@ -2,7 +2,7 @@
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 const manifestPath = 'android/app/src/main/AndroidManifest.xml';
 let m = readFileSync(manifestPath, 'utf8');
-const perms = ['POST_NOTIFICATIONS', 'SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'WAKE_LOCK'];
+const perms = ['REQUEST_INSTALL_PACKAGES', 'POST_NOTIFICATIONS', 'SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'WAKE_LOCK'];
 for (const p of perms) {
   const line = `<uses-permission android:name="android.permission.${p}" />`;
   if (!m.includes(`android.permission.${p}"`)) m = m.replace('</manifest>', `    ${line}\n</manifest>`);

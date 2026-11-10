@@ -11,9 +11,9 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<script src="./boot.js?v=2026.11.10-1"></script>
-<link rel="stylesheet" href="./styles.css?v=2026.11.10-1">
-<script type="module" src="./app.js?v=2026.11.10-1"></script>
+<script src="./boot.js?v=2026.11.10-2"></script>
+<link rel="stylesheet" href="./styles.css?v=2026.11.10-2">
+<script type="module" src="./app.js?v=2026.11.10-2"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +195,8 @@
     </div>
     <div class="card">
       <h2 class="card-title"><svg class="ic"><use href="#i-info"/></svg>Где хранятся записи</h2>
-      <p>Только на этом телефоне. Интернет и облако не используются.</p>
+      <p class="web-only">Только на этом телефоне. Интернет и облако не используются.</p>
+      <p class="native-only">Только на этом телефоне. В интернет приложение выходит лишь чтобы узнать номер новой версии — записи никуда не отправляются.</p>
       <button class="btn wide" type="button" id="btn-storage-info">Подробнее</button>
     </div>
     <div class="card">
@@ -203,6 +204,12 @@
       <p class="web-only">Напоминания срабатывают, пока приложение открыто.</p>
       <p class="native-only">Напоминания приходят, даже когда приложение закрыто.</p>
       <button class="btn wide" type="button" id="btn-remind-help">Как включить уведомления</button>
+    </div>
+    <div class="card native-only" id="card-app-update">
+      <h2 class="card-title"><svg class="ic"><use href="#i-restore"/></svg>Обновление приложения</h2>
+      <p><span id="app-update-current"></span> <b id="app-update-new"></b></p>
+      <p class="hint">Приложение раз в день проверяет, есть ли новая версия. Ваши записи при этом никуда не отправляются.</p>
+      <button class="btn wide" type="button" id="btn-app-update">Проверить обновления</button>
     </div>
     <p class="version muted" id="app-version"></p>
   </section>

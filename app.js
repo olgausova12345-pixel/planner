@@ -1176,6 +1176,10 @@ function renderMenu() {
   const last = ls.get('lastBackup');
   $('backup-last').textContent = last ? `Последняя копия: ${L.formatShortDate(L.toISO(new Date(Number(last))), today())}` : 'Копию ещё не сохраняли.';
   $('card-install').hidden = isInstalled();
+  if (native.available) {
+    native.appInfo().then((i) => { if (i) $('app-update-current').textContent = `Установлена версия ${i.version}.`; });
+    $('app-update-new').textContent = appUpdate && appUpdate.available ? `Доступна версия ${appUpdate.version}.` : '';
+  }
 }
 
 // ---------- Резервная копия ----------
@@ -1303,7 +1307,9 @@ $('btn-storage-info').addEventListener('click', async () => {
   const persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted().catch(() => false) : false;
   const mb = (b) => (b / 1048576).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
   dialogs.info('Где хранятся записи', [
-    h('p', {}, 'Все записи хранятся только на этом телефоне, внутри браузера. На сервер и в облако ничего не отправляется. На другом телефоне их не будет.'),
+    h('p', {}, native.available
+      ? 'Все записи хранятся только на этом телефоне, внутри приложения. На сервер и в облако ничего не отправляется: в интернет приложение выходит лишь раз в день, чтобы узнать номер новой версии. На другом телефоне записей не будет.'
+      : 'Все записи хранятся только на этом телефоне, внутри браузера. На сервер и в облако ничего не отправляется. На другом телефоне их не будет.'),
     h('h3', {}, 'Когда записи могут пропасть'),
     h('ul', {}, [
       'если очистить данные браузера (Chrome → Настройки → Конфиденциальность → Очистить историю, с галочкой «Файлы cookie и данные сайтов»);',
@@ -1322,6 +1328,8 @@ $('btn-storage-info').addEventListener('click', async () => {
 let installEvt = null;
 let swWaiting = null;
 let nativePerm = null;
+let appUpdate = null;          // { available, version, current, url }
+let appUpdateBusy = null;      // текст прогресса во время скачивания
 let updateRequested = false;
 let bannerKind = null;
 const session = { installLater: false, updateLater: false };
@@ -1370,6 +1378,14 @@ function updateBanners() {
       } },
       { label: 'Позже', fn: () => { session.permLater = true; updateBanners(); } },
     ]);
+    return;
+  }
+  if (native.available && (appUpdateBusy || (appUpdate && appUpdate.available && !session.appUpdateLater))) {
+    showBanner('appupdate', appUpdateBusy || `Доступна новая версия приложения (${appUpdate.version}). Ваши записи сохранятся.`,
+      appUpdateBusy ? [] : [
+        { label: 'Обновить', primary: true, fn: doAppUpdate },
+        { label: 'Позже', fn: () => { session.appUpdateLater = true; updateBanners(); } },
+      ]);
     return;
   }
   if (backupDue()) {
@@ -1422,6 +1438,44 @@ window.addEventListener('appinstalled', () => { ls.set('installed', '1'); instal
 matchMedia('(display-mode: standalone)').addEventListener('change', () => { syncInstallUI(); updateBanners(); });
 $('btn-install-head').addEventListener('click', doInstall);
 $('btn-install-menu').addEventListener('click', doInstall);
+
+// ---------- Обновление Android-приложения ----------
+async function checkAppUpdate({ manual = false } = {}) {
+  if (!native.available) return;
+  if (!manual) {
+    const last = Number(ls.get('appUpdateChecked') || 0);
+    if (Date.now() - last < 12 * 3600e3 || navigator.onLine === false) { updateBanners(); return; }
+  }
+  try {
+    appUpdate = await native.checkUpdate();
+    ls.set('appUpdateChecked', String(Date.now()));
+    if (manual && !appUpdate.available) toast('У вас последняя версия приложения');
+    if (manual && appUpdate.available) session.appUpdateLater = false;
+  } catch (e) {
+    console.warn('update', e);
+    if (manual) dialogs.info('Не удалось проверить обновления', [h('p', {}, 'Нет связи с интернетом. Проверьте интернет и попробуйте ещё раз.')]);
+  }
+  renderMenu(); updateBanners();
+}
+async function doAppUpdate() {
+  if (!appUpdate || !appUpdate.url) return;
+  await flushNote();
+  appUpdateBusy = 'Скачиваю обновление…';
+  updateBanners();
+  try {
+    await native.installUpdate(appUpdate.url, (p) => { appUpdateBusy = `Скачиваю обновление… ${Math.round(p * 100)}%`; updateBanners(); });
+    appUpdateBusy = null; session.appUpdateLater = true; updateBanners();
+    toast('Нажмите «Обновить» в окне Android', { ms: 8000 });
+  } catch (e) {
+    console.warn('install', e);
+    appUpdateBusy = null; updateBanners();
+    dialogs.info('Не удалось обновить', [
+      h('p', {}, 'Проверьте интернет и попробуйте ещё раз.'),
+      h('p', {}, 'Если Android попросил разрешение — включите «Разрешить установку из этого источника» для Планировщика, вернитесь и нажмите «Обновить» снова.'),
+    ]);
+  }
+}
+$('btn-app-update').addEventListener('click', () => checkAppUpdate({ manual: true }));
 
 // ---------- Service Worker и обновления ----------
 async function registerSW() {
@@ -1523,7 +1577,8 @@ async function start() {
     updateBanners();
     native.reschedule();
     native.onOpen((date) => { state.mode = 'day'; state.backTo = null; setView('plan'); setPlanDate(date); });
-    native.onResume(async () => { nativePerm = await native.status(); updateBanners(); native.reschedule(); tick(); });
+    native.onResume(async () => { nativePerm = await native.status(); updateBanners(); native.reschedule(); tick(); checkAppUpdate(); });
+    setTimeout(() => checkAppUpdate(), 3000);
   }
   tick();
   setInterval(tick, 15000);

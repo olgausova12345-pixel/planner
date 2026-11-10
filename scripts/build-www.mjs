@@ -11,6 +11,6 @@ for (const d of DIRS) if (existsSync(d)) cpSync(d, `www/${d}`, { recursive: true
 // В приложении страница грузится только из самого APK, поэтому CSP ослабляем до «только свои файлы».
 let html = readFileSync('www/index.html', 'utf8');
 html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/,
-  `<meta http-equiv="Content-Security-Policy" content="default-src 'self' capacitor: https://localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://localhost capacitor:; object-src 'none'">`);
+  `<meta http-equiv="Content-Security-Policy" content="default-src 'self' capacitor: https://localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://localhost capacitor: https://api.github.com; object-src 'none'">`);
 writeFileSync('www/index.html', html);
 console.log('www готова');

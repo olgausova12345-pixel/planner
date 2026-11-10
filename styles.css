@@ -653,3 +653,4 @@ html[data-layout="wide"] #view-plan > .quick-row, html[data-layout="wide"] #view
 :root[data-theme="patrick"] .mcell.today, :root[data-theme="patrick"] .week-day.today { border-color: var(--accent-text); box-shadow: 0 0 12px rgba(227, 163, 59, .35); }
 :root[data-theme="patrick"] .toast { background: #20422B; color: #FFF8E7; border: 2px solid var(--accent-text); }
 :root[data-theme="patrick"] .banner { background: #2E2A14; border-color: var(--accent-text); color: var(--ink); }
+:root[data-native="1"] .card.native-only { display: flex; }
