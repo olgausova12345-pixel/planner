@@ -317,3 +317,9 @@ test('время дел: 7:00–21:00 с шагом 15 минут, «По час
   const d = L.parseISO('2026-11-10'); d.setHours(6, 25, 0, 0);
   assert.equal(L.dueReminders([task], d).length, 1);
 });
+
+test('копия: испорченная дата экспорта не показывается', () => {
+  const r = L.parseBackup(JSON.stringify({ format: 'planner-backup', version: 1, exportedAt: 'мусор', data: { tasks: [] } }));
+  assert.equal(r.exportedAt, null);
+  assert.equal(L.parseBackup(JSON.stringify({ format: 'planner-backup', version: 1, exportedAt: '2026-10-01T10:00:00Z', data: {} })).exportedAt, '2026-10-01T10:00:00Z');
+});

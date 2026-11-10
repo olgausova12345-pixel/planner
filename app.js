@@ -800,7 +800,7 @@ function openTaskDialog(task, { date, time } = {}) {
   sel.value = inList ? (tm || '') : 'custom';
   const [hh, mm] = (tm && !inList ? tm : '12:00').split(':');
   $('t-hh').value = hh; $('t-mm').value = mm;
-  $('t-remind').checked = task ? !!task.remind : false;
+  $('t-remind').checked = task ? !!task.remind : true; // у нового дела напоминание включено по умолчанию
   $('t-repeat').value = task && task.repeat ? task.repeat.kind : '';
   tDays = new Set(task && task.repeat && task.repeat.days ? task.repeat.days : [L.weekday(date || state.date)]);
   [...$('t-days').children].forEach((b, i) => b.setAttribute('aria-pressed', String(tDays.has(i))));
@@ -1243,6 +1243,7 @@ $('restore-file').addEventListener('change', async (e) => {
       await db.replace(snapshot);
       for (const s of Object.keys(snapshot)) data[s] = new Map(snapshot[s].map((r) => [r.id, r]));
       renderAll();
+      native.reschedule();
     },
   });
 });
@@ -1285,14 +1286,22 @@ $('btn-remind-help').addEventListener('click', async () => {
 });
 async function nativeRemindHelp() {
   const st = await native.status();
+  const pinfo = await native.pendingInfo();
   const okLine = (ok, text) => h('p', { class: ok ? '' : 'field-error' }, ok ? `✓ ${text}: включено` : `✗ ${text}: выключено`);
   dialogs.info('Уведомления и напоминания', [
     h('p', {}, 'Напоминания приходят, даже когда приложение закрыто: звук, вибрация и всплывающее окно. За 15 минут до дела и в 9:00 накануне и в день рождения. Интернет не нужен.'),
     okLine(st.notifications, 'Уведомления'),
     okLine(st.exact, 'Точное время (будильники и напоминания)'),
+    pinfo ? h('p', {}, pinfo.count ? `Поставлено напоминаний: ${pinfo.count}. Ближайшее: ${L.formatShortDate(pinfo.next ? pinfo.next.date : L.toISO(now()), today())}, ${pinfo.next ? pinfo.next.at.toTimeString().slice(0, 5) + ' — ' + pinfo.next.body : ''}`
+      : 'Сейчас нет поставленных напоминаний. Чтобы напоминание пришло, у дела должно быть время и отметка «Напомнить за 15 минут».') : null,
+    h('button', { class: 'btn primary wide', type: 'button', on: { click: async () => {
+      try { await native.testReminder(); dialogs.close($('dlg-info')); toast('Через минуту придёт проверочное уведомление. Можно закрыть приложение', { ms: 8000 }); }
+      catch { toast('Не удалось поставить проверочное уведомление'); }
+    } } }, 'Проверить: уведомление через 1 минуту'),
     !st.notifications ? h('button', { class: 'btn primary wide', type: 'button', on: { click: async () => { await native.requestPermission(); dialogs.close($('dlg-info')); setTimeout(nativeRemindHelp, 300); } } }, 'Разрешить уведомления') : null,
     !st.exact ? h('button', { class: 'btn primary wide', type: 'button', on: { click: () => native.openExactSettings() } }, 'Разрешить точное время') : null,
-    h('h3', {}, 'Xiaomi: чтобы напоминания не опаздывали'),
+    h('h3', {}, 'Xiaomi: обязательно включите «Автозапуск»'),
+    h('p', { class: 'hint warn' }, 'Без «Автозапуска» Xiaomi удаляет все напоминания, когда приложение смахивают из списка открытых.'),
     steps([
       'Нажмите и подержите значок «Планировщик» → «О приложении».',
       'Включите «Автозапуск».',

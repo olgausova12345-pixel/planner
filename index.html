@@ -11,9 +11,9 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<script src="./boot.js?v=2026.11.10-2"></script>
-<link rel="stylesheet" href="./styles.css?v=2026.11.10-2">
-<script type="module" src="./app.js?v=2026.11.10-2"></script>
+<script src="./boot.js?v=2026.11.10-3"></script>
+<link rel="stylesheet" href="./styles.css?v=2026.11.10-3">
+<script type="module" src="./app.js?v=2026.11.10-3"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -245,7 +245,7 @@
       </div>
     </div>
     <label class="check-row" id="t-remind-row" hidden><input type="checkbox" id="t-remind"><span>Напомнить за 15 минут</span></label>
-    <p class="hint" id="t-remind-hint" hidden>Напоминание сработает, если приложение будет открыто.</p>
+    <p class="hint" id="t-remind-hint" hidden><span class="web-only">Напоминание сработает, если приложение будет открыто.</span><span class="native-only">Придёт со звуком, даже если приложение закрыто.</span></p>
     <label class="field-label" for="t-repeat">Повтор</label>
     <select id="t-repeat" class="select">
       <option value="">Не повторять</option>

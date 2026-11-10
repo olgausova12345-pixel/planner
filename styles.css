@@ -654,3 +654,4 @@ html[data-layout="wide"] #view-plan > .quick-row, html[data-layout="wide"] #view
 :root[data-theme="patrick"] .toast { background: #20422B; color: #FFF8E7; border: 2px solid var(--accent-text); }
 :root[data-theme="patrick"] .banner { background: #2E2A14; border-color: var(--accent-text); color: var(--ink); }
 :root[data-native="1"] .card.native-only { display: flex; }
+:root[data-native="1"] span.native-only { display: inline; }

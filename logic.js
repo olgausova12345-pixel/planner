@@ -504,7 +504,7 @@ export function parseBackup(text) {
       data[s].push(normalizeRecord(s, r));
     }
   }
-  return { ok: true, data, skipped, sections: Object.keys(data), exportedAt: obj.exportedAt || null };
+  return { ok: true, data, skipped, sections: Object.keys(data), exportedAt: typeof obj.exportedAt === 'string' && !Number.isNaN(Date.parse(obj.exportedAt)) ? obj.exportedAt : null };
 }
 export function countRecords(data) {
   return BACKUP_SECTIONS.reduce((n, k) => n + (data[k] ? data[k].length : 0), 0);

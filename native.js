@@ -18,15 +18,18 @@ export function createNative(ctx) {
   let timer = null;
   let channelReady = false;
   let lastSignature = '';
+  let channelOk = false;
 
   async function ensureChannel() {
     if (channelReady || !LN) return;
     for (const id of OLD_CHANNELS) { try { await LN.deleteChannel({ id }); } catch { /* не было */ } }
+    channelOk = false;
     try {
       await LN.createChannel({
         id: CHANNEL, name: 'Напоминания', description: 'Дела и дни рождения',
         importance: 5, visibility: 0, vibration: true, lights: true, lightColor: '#FF8C1A',
       });
+      channelOk = true;
     } catch (e) { console.warn('channel', e); }
     channelReady = true;
   }
@@ -72,14 +75,15 @@ export function createNative(ctx) {
       const stale = (pending.notifications || []).filter((n) => !keep.has(Number(n.id)));
       // Снимаем всё старое и ставим заново — так изменения времени и текста точно применятся.
       if (pending.notifications && pending.notifications.length) {
-        await LN.cancel({ notifications: pending.notifications.map((n) => ({ id: Number(n.id) })) });
+        const old = pending.notifications.filter((n) => Number(n.id) !== 1);
+        if (old.length) await LN.cancel({ notifications: old.map((n) => ({ id: Number(n.id) })) });
       }
       if (list.length) {
         await LN.schedule({
           notifications: list.map((r) => ({
             id: r.id, title: r.title, body: r.body, largeBody: r.body,
             schedule: { at: r.at, allowWhileIdle: true },
-            channelId: CHANNEL, smallIcon: 'ic_stat_planner', iconColor: '#0B4F4A',
+            ...(channelOk ? { channelId: CHANNEL } : {}), smallIcon: 'ic_stat_planner', iconColor: '#0B4F4A',
             autoCancel: true, extra: { date: r.date },
           })),
         });
@@ -160,5 +164,23 @@ export function createNative(ctx) {
     await FO.openFile({ path: uri, mimeType: 'application/vnd.android.package-archive' });
   }
 
-  return { available, status, requestPermission, openExactSettings, reschedule, shareBackup, onOpen, onResume, appInfo, checkUpdate, installUpdate };
+  /** Сколько напоминаний поставлено в Android и какое ближайшее */
+  async function pendingInfo() {
+    if (!LN) return null;
+    try {
+      const list = L.upcomingReminders(ctx.getTasks(), ctx.getBirthdays(), ctx.now(), { days: DAYS_AHEAD, max: MAX_SCHEDULED });
+      const p = await LN.getPending();
+      return { count: (p.notifications || []).length, next: list[0] || null };
+    } catch { return null; }
+  }
+  /** Тестовое уведомление через минуту */
+  async function testReminder() {
+    await ensureChannel();
+    const at = new Date(Date.now() + 60 * 1000);
+    await LN.schedule({ notifications: [{ id: 1, title: 'Проверка напоминания', body: 'Напоминания работают. Так будут приходить ваши напоминания о делах.',
+      schedule: { at, allowWhileIdle: true }, ...(channelOk ? { channelId: CHANNEL } : {}), smallIcon: 'ic_stat_planner', iconColor: '#0B4F4A', autoCancel: true }] });
+    lastSignature = ''; // следующий пересчёт не должен снять тест
+  }
+
+  return { pendingInfo, testReminder, available, status, requestPermission, openExactSettings, reschedule, shareBackup, onOpen, onResume, appInfo, checkUpdate, installUpdate };
 }

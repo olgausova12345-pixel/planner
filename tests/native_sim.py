@@ -51,6 +51,11 @@ with sync_playwright() as p:
     pg.click('#btn-remind-help'); pg.wait_for_timeout(300)
     ok('справка: статус разрешений и Автозапуск', pg.locator('#dlg-info', has_text='Автозапуск').count()==1 and pg.locator('#dlg-info', has_text='включено').count()==1)
     pg.screenshot(path='/tmp/native-help.png')
+    ok('справка показывает, сколько напоминаний поставлено', pg.locator('#dlg-info', has_text='Поставлено напоминаний').count()==1)
+    pg.get_by_role('button', name='Проверить: уведомление через 1 минуту').click(); pg.wait_for_timeout(300)
+    ok('проверочное уведомление поставлено через минуту', pg.evaluate("__ln.scheduled.some(n => n.id === 1 && new Date(n.schedule.at) - Date.now() > 50000)"))
+    e2e.nav(pg,'План'); pg.get_by_role('button', name='Добавить дело').click(); pg.select_option('#t-time','12:00'); pg.wait_for_timeout(150)
+    ok('у нового дела «Напомнить за 15 минут» включено сразу', pg.is_checked('#t-remind') and pg.is_visible('text=Придёт со звуком, даже если приложение закрыто'))
     pg.keyboard.press('Escape')
     ok('нет ошибок JS', not errs); print(errs)
     # без разрешения точного времени — баннер
