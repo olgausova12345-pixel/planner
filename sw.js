@@ -1,5 +1,5 @@
 // sw.js — офлайн-кэш оболочки. Версия меняется при каждом релизе (одна строка во всех файлах).
-const VERSION = '2026.11.10-3';
+const VERSION = '2026.11.12-1';
 const CACHE = `planner-${VERSION}`;
 const V = `?v=${VERSION}`;
 const SHELL = [
