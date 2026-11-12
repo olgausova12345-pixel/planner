@@ -1154,7 +1154,7 @@ $('scale-plus').addEventListener('click', () => applyScale(curScale() + 0.1));
 $('scale-reset').addEventListener('click', () => applyScale(1));
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 // Праздничные темы: цвет системной строки и тёмная ли тема
-const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false] };
+const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false], friends: ['#2457A6', false] };
 function applyTheme(pref) {
   ls.set('theme', pref);
   const fest = FESTIVE[pref];

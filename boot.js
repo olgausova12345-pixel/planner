@@ -7,7 +7,7 @@
     var s = parseFloat(localStorage.getItem('planner.scale'));
     if (s >= 0.5 && s <= 1.5) scale = s;
   } catch (e) { /* хранилище недоступно */ }
-  var FEST = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false] };
+  var FEST = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false], friends: ['#2457A6', false] };
   var fest = FEST[theme];
   var dark = fest ? fest[1] : (theme === 'dark' || (theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches));
   root.dataset.theme = fest ? theme : (dark ? 'dark' : 'light');

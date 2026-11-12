@@ -400,7 +400,7 @@ def run_custom_time_and_themes(browser):
     rows = page.locator('.hour-row .hour-btn').all_inner_texts()
     check('«По часам» с 7:00 до 21:00 и строка для 6:40', rows[0] == '6:40' and '7:00' in rows and rows[-1] == '21:00')
     page.keyboard.press('Escape'); page.wait_for_timeout(200)
-    for th, color in [('newyear', '#0B1630'), ('patrick', '#0E2214'), ('titmouse', '#1F3A6B'), ('halloween', '#140B1A')]:
+    for th, color in [('newyear', '#0B1630'), ('patrick', '#0E2214'), ('titmouse', '#1F3A6B'), ('friends', '#2457A6'), ('halloween', '#140B1A')]:
         nav(page, 'Меню'); page.locator(f'#theme-seg [data-theme-v="{th}"]').click(); page.wait_for_timeout(200)
         ok = page.evaluate(f"document.documentElement.dataset.theme === '{th}' && document.querySelector('meta[name=theme-color]').content === '{color}'")
         for v in ['План', 'Покупки', 'Заметки', 'ДР']:
