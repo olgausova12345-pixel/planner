@@ -1131,7 +1131,7 @@ $('btn-folder-delete').addEventListener('click', async () => {
   if (!f) return;
   const inside = notesArr().filter((n) => n.folderId === f.id);
   const yes = await dialogs.confirm(`Удалить папку «${f.name}»?`,
-    inside.length ? `Записи не удалятся: ${L.pluralN(inside.length, 'заметка вернётся', 'заметки вернутся', 'заметок вернутся')} во «Все».` : 'Папка пустая.', 'Удалить папку', true);
+    inside.length ? `Заметки не удалятся: ${L.pluralN(inside.length, 'заметка вернётся', 'заметки вернутся', 'заметок вернутся')} во «Все».` : 'Папка пустая.', 'Удалить папку', true);
   if (!yes) return;
   const changes = inside.map((n) => ({ store: 'notes', put: { ...n, folderId: null } }));
   changes.push({ store: 'noteFolders', del: f.id });
