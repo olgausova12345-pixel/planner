@@ -1154,7 +1154,7 @@ $('scale-plus').addEventListener('click', () => applyScale(curScale() + 0.1));
 $('scale-reset').addEventListener('click', () => applyScale(1));
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 // Праздничные темы: цвет системной строки и тёмная ли тема
-const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false], friends: ['#2457A6', false] };
+const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true] };
 function applyTheme(pref) {
   ls.set('theme', pref);
   const fest = FESTIVE[pref];
@@ -1174,7 +1174,18 @@ function renderMenu() {
   $('scale-value').textContent = `${Math.round(curScale() * 100)}%`;
   for (const b of document.querySelectorAll('#theme-seg [data-theme-v]')) b.setAttribute('aria-checked', String(b.dataset.themeV === (ls.get('theme') || 'auto')));
   const last = ls.get('lastBackup');
-  $('backup-last').textContent = last ? `Последняя копия: ${L.formatShortDate(L.toISO(new Date(Number(last))), today())}` : 'Копию ещё не сохраняли.';
+  const bl = $('backup-last');
+  if (backupDue()) {
+    bl.textContent = last
+      ? 'Резервную копию не сохраняли больше месяца. Сохраните новую.'
+      : 'Сохраните резервную копию записей себе в мессенджер — это единственная защита, если с телефоном что-то случится.';
+    bl.style.color = 'var(--accent)';
+    bl.style.fontWeight = '700';
+  } else {
+    bl.textContent = last ? `Последняя копия: ${L.formatShortDate(L.toISO(new Date(Number(last))), today())}` : 'Копию ещё не сохраняли.';
+    bl.style.color = '';
+    bl.style.fontWeight = '';
+  }
   $('card-install').hidden = isInstalled();
   if (native.available) {
     native.appInfo().then((i) => { if (i) $('app-update-current').textContent = `Установлена версия ${i.version}.`; });
@@ -1395,14 +1406,6 @@ function updateBanners() {
         { label: 'Обновить', primary: true, fn: doAppUpdate },
         { label: 'Позже', fn: () => { session.appUpdateLater = true; updateBanners(); } },
       ]);
-    return;
-  }
-  if (backupDue()) {
-    const never = !ls.get('lastBackup');
-    showBanner('backup', never ? 'Сохраните резервную копию записей себе в мессенджер — это единственная защита, если с телефоном что-то случится.' : 'Резервную копию не сохраняли больше месяца. Сохраните новую.', [
-      { label: 'Сохранить копию', primary: true, fn: saveBackup },
-      { label: 'Позже', fn: () => { ls.set('backupSnooze', String(Date.now())); updateBanners(); } },
-    ]);
     return;
   }
   if (bannerKind) clearBanner();
