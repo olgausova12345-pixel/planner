@@ -1131,7 +1131,7 @@ $('btn-folder-delete').addEventListener('click', async () => {
   if (!f) return;
   const inside = notesArr().filter((n) => n.folderId === f.id);
   const yes = await dialogs.confirm(`Удалить папку «${f.name}»?`,
-    inside.length ? `Заметки не удалятся: ${L.pluralN(inside.length, 'заметка вернётся', 'заметки вернутся', 'заметок вернутся')} во «Все».` : 'Папка пустая.', 'Удалить папку', true);
+    inside.length ? `Записи не удалятся: ${L.pluralN(inside.length, 'заметка вернётся', 'заметки вернутся', 'заметок вернутся')} во «Все».` : 'Папка пустая.', 'Удалить папку', true);
   if (!yes) return;
   const changes = inside.map((n) => ({ store: 'notes', put: { ...n, folderId: null } }));
   changes.push({ store: 'noteFolders', del: f.id });
@@ -1154,7 +1154,7 @@ $('scale-plus').addEventListener('click', () => applyScale(curScale() + 0.1));
 $('scale-reset').addEventListener('click', () => applyScale(1));
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 // Праздничные темы: цвет системной строки и тёмная ли тема
-const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true] };
+const FESTIVE = { halloween: ['#140B1A', true], newyear: ['#0B1630', true], patrick: ['#0E2214', true], titmouse: ['#1F3A6B', false], friends: ['#2457A6', false] };
 function applyTheme(pref) {
   ls.set('theme', pref);
   const fest = FESTIVE[pref];
